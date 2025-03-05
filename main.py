@@ -1,9 +1,20 @@
 import time
 import multiprocessing
-from utils.utils import *
-from utils.midiUtils import *
-from config.config import *
-from lib.ledStripDaemon import *
+from utils.utils import read_json_file
+from utils.midiUtils import setup_custom_midi_connection
+from config.config import MIDI_UNIT, PAD_NOTES, CYMBAL_NOTES
+import mido
+
+def setup_midi_connection():
+    MIDI_DEVICE_NAME = "UM-ONE MIDI 1"  # Change to "TD-17 MIDI 1" if needed
+
+    available_ports = mido.get_input_names()
+    if MIDI_DEVICE_NAME not in available_ports:
+        print(f"Error: {MIDI_DEVICE_NAME} not found! Available devices: {available_ports}")
+        exit(1)
+
+    print(f"✅ MIDI Device Found: {MIDI_DEVICE_NAME}")
+    return mido.open_input(MIDI_DEVICE_NAME)
 
 def listen_to_midi_notes():
     time_counter = 0
@@ -13,32 +24,15 @@ def listen_to_midi_notes():
         time.sleep(0.5)
         time_counter += 1
 
-    midi_connection = setup_custom_midi_connection(MIDI_UNIT)
+    midi_connection = setup_midi_connection()
 
-    # Start LED control daemon with animation
-    led_strip_message_queue = multiprocessing.Queue()
-    led_strip_message_queue.put({"animation":True, "animation_type": 'startup'})
-    led_strip_daemon_thread = multiprocessing.Process(target=ledStripDaemon, args=(led_strip_message_queue,))
-    led_strip_daemon_thread.start()
+    print("🎵 Listening for MIDI drum hits...")
 
-    # Listen for midi messages
+    # Listen for MIDI messages
     for msg in midi_connection:
         if msg.type == "note_on":
-            control_file = read_json_file("active_control_file.json")
-            if control_file["animation"]:
-                led_strip_message_queue.put({"animation":True, "animaton_type": control_file["animation_type"]})
-                continue
-            elif control_file["app_state"] == "stop":
-                exit(1)
-
             if msg.note in PAD_NOTES or msg.note in CYMBAL_NOTES:
-                led_strip_message_queue.put({"note":msg.note, "velocity":msg.velocity , "animation":False})
+                print(f"🥁 Drum Hit! Note: {msg.note}, Velocity: {msg.velocity}")
 
 if __name__ == "__main__":
     listen_to_midi_notes()
-
-
-#TODO
-# - remove animation once started
-# - add startup options in UI
-# - build setup script
