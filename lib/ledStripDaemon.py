@@ -12,10 +12,10 @@ def get_led_indices_for_note(note):
     """
     drum_type = MIDI_NOTE_INDEX.get(note)
     if drum_type is None:
-        print(f"Warning: Unmapped MIDI note: {note}")
+        # print(f"Warning: Unmapped MIDI note: {note}")
         return None, None, None
     if drum_type not in LED_DRUM_INDEX:
-        print(f"Warning: Drum type '{drum_type}' for note {note} is not active in LED_DRUM_INDEX")
+        # print(f"Warning: Drum type '{drum_type}' for note {note} is not active in LED_DRUM_INDEX")
         return None, None, None
     start, end = LED_DRUM_INDEX[drum_type]
     return start, end, drum_type
