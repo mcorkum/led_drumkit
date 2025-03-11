@@ -44,12 +44,14 @@ def ledStripDaemon(midi_note_queue):
                 print(f"ERROR: No drum type found for MIDI Note {midi_hit['note']}")
                 continue
 
-            hit_color = colours.get(drum_type, {"r": 255, "g": 255, "b": 255})  # Default to white
+            # Fix: Ensure `hit_color` is a list, not a dictionary
+            hit_color_dict = colours.get(drum_type, {"r": 255, "g": 255, "b": 255})  # Default to white
+            hit_color = [hit_color_dict["r"], hit_color_dict["g"], hit_color_dict["b"]]
             print(f"DEBUG: Drum Type: {drum_type}, Color: {hit_color}")
 
             # Modify brightness based on velocity
             multiplier = midi_hit["velocity"] * ((100 / 127)) * 0.01
-            pixel_color = [int(hit_color["r"] * multiplier), int(hit_color["g"] * multiplier), int(hit_color["b"] * multiplier)]
+            pixel_color = [int(hit_color[0] * multiplier), int(hit_color[1] * multiplier), int(hit_color[2] * multiplier)]
             print(f"DEBUG: Adjusted Color for Velocity {midi_hit['velocity']}: {pixel_color}")
 
             # Store and apply color
