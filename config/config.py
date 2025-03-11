@@ -2,25 +2,18 @@ import json
 
 MIDI_UNIT = 'UM-ONE:UM-ONE MIDI 1 20:0'
 
-DRUMKIT_NAME = 'config/roland_td17_config.json' #TODO
+# DRUMKIT_NAME = 'config/roland_td17_config.json' #TODO
 
-with open(DRUMKIT_NAME) as json_file:
-    DRUMKIT_CONFIG = json.load(json_file)
+# with open(DRUMKIT_NAME) as json_file:
+#     DRUMKIT_CONFIG = json.load(json_file)
 
 STRIP_GPIO_PIN = 18
-
 LED_COUNT = 150
-
 PAD_NOTES = [36, 38,48,45,43,27,40,50]
-
 CYMBAL_NOTES = [49,55,52,57,51,53,59,26,22,44]
-
 KICK_NOTE = 36
-
 SNARE_NOTE = 38
-
 ACCENT_NOTE_1 = 47
-
 ACCENT_NOTE_2 = 58
 
 MIDI_NOTE_INDEX = {
