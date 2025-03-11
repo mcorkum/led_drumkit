@@ -31,9 +31,17 @@
     "led_index": [62, 68],
     "drum_type": "crash1"
   },
+  "55": {
+    "led_index": [62, 68],
+    "drum_type": "crash1"
+  },
   "52": {
     "led_index": [57, 62],
     "drum_type": "crash2"
+  },
+  "51": {
+    "led_index": [51, 57],
+    "drum_type": "ride"
   },
   "53": {
     "led_index": [51, 57],
