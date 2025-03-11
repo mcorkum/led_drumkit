@@ -47,16 +47,16 @@ MIDI_NOTE_INDEX = {
 }
 
 LED_DRUM_INDEX = {
-    "kick":[0, 300],
-    "snare": [300, 355],
-    "tom1":[355, 387],
-    "tom2":[387, 420],
-    "tom3":[420, 453],
-    "tom4":[453, 507],
-    "hihat":[573,597],
-    "crash1":[551, 573],
-    "crash2":[529,551],
-    "ride":[507, 529]
+    "kick": [74, 149],     # 76 LEDs
+    "snare": [0, 13],      # 14 LEDs
+    "tom1": [13, 22],      # 10 LEDs
+    "tom2": [22, 30],      # 9 LEDs
+    "tom3": [30, 38],      # 9 LEDs
+    "tom4": [38, 51],      # 14 LEDs
+    "ride": [51, 57],      # 7 LEDs
+    "crash2": [57, 62],    # 6 LEDs
+    "crash1": [62, 68],    # 7 LEDs
+    "hihat": [68, 73]      # 6 LEDs
 }
 
 COLOURS = {
