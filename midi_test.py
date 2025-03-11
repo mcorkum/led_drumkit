@@ -1,7 +1,7 @@
 import mido
 
 # Find and select the Roland MIDI device
-MIDI_DEVICE_NAME = "UM-ONE MIDI 1"  # Change to "TD-17 MIDI 1" if detected under that name
+MIDI_DEVICE_NAME = "UM-ONE:UM-ONE MIDI 1 20:0"  # Change to "TD-17 MIDI 1" if detected under that name
 
 available_ports = mido.get_input_names()
 if MIDI_DEVICE_NAME not in available_ports:

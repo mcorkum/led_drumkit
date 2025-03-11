@@ -1,0 +1,15 @@
+36: Bass Drum
+44: Hat Pedal
+26: Hi Hat
+38: Snare
+40: Snare Rim
+48: Tom 1
+45: Tom 2
+43: Floor Tom
+51: Ride 
+53: Ride Bell
+49: Crash Bell
+55: Crash
+50: Rim - Tom 1
+45: Rim - Tom 2
+68: Rim - Floor Tom
