@@ -61,6 +61,8 @@ def ledStripDaemon(midi_note_queue):
         try:
             midi_hit = midi_note_queue.get_nowait()
 
+            print(f"DEBUG: Processing MIDI Note: {midi_hit['note']}")  # Debug log
+
             if midi_hit["animation"]:
                 runAnimation(led_strip, midi_hit["animation_type"])
                 continue
