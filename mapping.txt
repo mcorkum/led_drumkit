@@ -18,7 +18,8 @@
 
 51: Ride 
 53: Ride Bell
-59: Ride Crash
+
+59: Ride Crash / Crash 2
 
 55: Crash
 49: Crash Bell
