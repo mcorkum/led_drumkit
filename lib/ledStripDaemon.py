@@ -1,6 +1,6 @@
 from lib.ledStrip import *
 from utils.utils import *
-from config.config import LED_COUNT, STRIP_GPIO_PIN, MIDI_NOTE_INDEX, LED_DRUM_INDEX
+from config.config import LED_COUNT, STRIP_GPIO_PIN, MIDI_NOTE_INDEX, LED_DRUM_INDEX, THEME_NAME
 from config.pixelMap import *
 from animations.hitAnimations import *
 
@@ -66,7 +66,7 @@ def runAnimation(led_strip, animation_type):
 def ledStripDaemon(midi_note_queue):
     led_strip = LedStrip(LED_COUNT, STRIP_GPIO_PIN)
     current_strip_values = initStripValues(LED_COUNT)
-    colours = read_json_file('config/accentColours.json')
+    colours = read_json_file(f"config/themes/{THEME_NAME}.json")
 
     while True:
         try:

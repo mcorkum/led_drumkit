@@ -4,6 +4,9 @@ MIDI_UNIT = 'UM-ONE:UM-ONE MIDI 1 20:0'
 STRIP_GPIO_PIN = 18
 LED_COUNT = 150
 
+# Theme
+THEME_NAME = "default"
+
 # Updated lists so that all intended drum hits (including rims) are processed.
 PAD_NOTES = [36, 38, 40, 48, 50, 45, 47, 43, 58]
 CYMBAL_NOTES = [44, 26, 46, 51, 53, 59, 55, 49]
