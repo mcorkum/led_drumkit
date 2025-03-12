@@ -1,5 +1,5 @@
 {
   "app_state": "start",
-  "animation": true,
+  "animation": false,
   "animation_type": "startup"
 }
