@@ -24,7 +24,7 @@ def listen_to_midi_notes():
     # Listen for midi messages
     for msg in midi_connection:
         if msg.type == "note_on":
-            print(f"DEBUG: Received MIDI Note: {msg.note}, Velocity: {msg.velocity}")  # Debug log
+            # print(f"DEBUG: Received MIDI Note: {msg.note}, Velocity: {msg.velocity}")  # Debug log
             control_file = read_json_file("active_control_file.json")
             if control_file["animation"]:
                 led_strip_message_queue.put({"animation":True, "animaton_type": control_file["animation_type"]})
