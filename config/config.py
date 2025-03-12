@@ -32,16 +32,21 @@ MIDI_NOTE_INDEX = {
 # Updated LED zone mapping for only these drums.
 # Here, the LED strip is partitioned into zones that sum to 150 LEDs.
 # You can adjust these ranges as needed for your physical layout.
+# LED_DRUM_INDEX = {
+#     "snare":   [0, 14],    # 14 LEDs for snare
+#     "tom1":    [14, 24],   # 10 LEDs for Tom 1 (head & rim)
+#     "tom2":    [24, 33],   # 9 LEDs for Tom 2 (head & rim)
+#     "tom3":    [33, 48],   # 15 LEDs for Floor Tom (head & rim)
+#     "ride":    [48, 54],   # 6 LEDs for Ride
+#     "crash2":  [54, 64],   # 10 LEDs for Ride Crash / Crash 2
+#     "crash1":  [64, 71],   # 7 LEDs for Crash (dedicated)
+#     "hihat":   [71, 77],   # 6 LEDs for Hi Hat (Hat Pedal/Hi Hat/Edge)
+#     "kick":    [77, 150]   # 73 LEDs for Bass Drum (kick)
+# }
+
 LED_DRUM_INDEX = {
-    "snare":   [0, 14],    # 14 LEDs for snare
-    "tom1":    [14, 24],   # 10 LEDs for Tom 1 (head & rim)
-    "tom2":    [24, 33],   # 9 LEDs for Tom 2 (head & rim)
-    "tom3":    [33, 48],   # 15 LEDs for Floor Tom (head & rim)
-    "ride":    [48, 54],   # 6 LEDs for Ride
-    "crash2":  [54, 64],   # 10 LEDs for Ride Crash / Crash 2
-    "crash1":  [64, 71],   # 7 LEDs for Crash (dedicated)
-    "hihat":   [71, 77],   # 6 LEDs for Hi Hat (Hat Pedal/Hi Hat/Edge)
-    "kick":    [77, 150]   # 73 LEDs for Bass Drum (kick)
+    "kick": [0, 75],
+    "snare": [75, 150]
 }
 
 COLOURS = {
