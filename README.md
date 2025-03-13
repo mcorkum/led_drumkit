@@ -16,95 +16,139 @@ Turn your drumkit into a light show! By mounting an led strip to your drums you 
 - (Optional) [Useful power connectors](https://www.amazon.co.uk/gp/product/B01JZ3O36O/ref=ppx_yo_dt_b_search_asin_title?ie=UTF8&psc=1)
 - (Optional) [No solder strip connectors](https://www.amazon.co.uk/gp/product/B08FHXW4G5/ref=ppx_yo_dt_b_asin_title_o09_s00?ie=UTF8&psc=1)
 
-## Installation
+# LED Drumkit - Raspberry Pi Setup Guide
 
-### LED setup
+This guide provides step-by-step instructions to set up the `led_drumkit` project on a **fresh Raspberry Pi installation**.
 
-Using the steps listed here you can setup you Raspberry pi to control an LED strip. These steps are based off the info [here](https://tutorials-raspberrypi.com/connect-control-raspberry-pi-ws2812-rgb-led-strips/)
+## 📌 Prerequisites
 
-1. Install packages on the Raspberry Pi. `pip install requirements.txt`, `sudo pip install rpi_ws281x`
-2. Connect the Power supply to the strip and link to the Pi
-   - Connect the data line (green) to pin 18 in case
-   - Connect the ground (black) to pin 6 or any available ground pin.
-   - Connect the other parts of the led to the power supply.
-3. Run the example script from the link above `examples/strandtest.py`
-4. Connect the midi unit to the Pi (through USB). You can test the connection by running the following in python
+- A Raspberry Pi (any model with GPIO support)
+- Raspbian (Raspberry Pi OS) installed
+- Internet connection
 
-```python
-import mido
+---
 
-mido.get_input_names() # Get connected midi device names
+## 🛠️ 1. Update & Upgrade the Raspberry Pi
 
-with mido.open_input('<midi_device_name>') as inport:
-    for message in inport:
-        print(message)
+Ensure your system is up-to-date:
+
+```bash
+sudo apt-get update && sudo apt-get upgrade -y
 ```
 
-5. Cut the LED strip and mount each section to your drumkit
-6. Modify `config.py` to set the length of the LED strips (TODO: add a test script to handle this)
-7. Modify `accentColors.json` to choose the LED colours.
-8. Run the main script and enjoy your led light show! `python main.py`
+---
 
-### Web app control setup
+## 📦 2. Install Required System Packages
 
-1. Install npm
-2. Install vue js `npm install vue`
-3. `cd UI/` and run `npm update`
-4. Replace the ip in `src/components/var.js` to the ip of the raspberry pi (TODO: Add a script to handle this)
-5. Start the server `npm run serve`
-6. Start the control server `python controlServer.py`
-7. Open the http://<ip>:8080/ and enjoy!
+Install dependencies for **Python, MIDI, GPIO, and Audio**:
 
-### Pi Setup
-
-1. Make sure it's up to date
-   `sudo apt-get update`
-2. Install required packages
-   `sudo apt-get install gcc make build-essential python-dev git scons swig`
-3. Deactive the audio output
-   sudo echo "blacklist snd_bcm2835" > /etc/modprobe.d/snd-blacklist.conf
-4.
-5. Restart
-   `sudo reboot`
-6. Download the LED control library
-   `git clone https://github.com/jgarff/rpi_ws281x`
-7. Compile the libraries
-   `cd rpi_ws281x/;sudo scons`
-8. Setup python libraries
-
-```
-cd python
-sudo python3 setup.py build
-sudo python3 setup.py install
-sudo pip3 install adafruit-circuitpython-neopixel
+```bash
+sudo apt-get install -y python3 python3-venv python3-pip git libasound2-dev libjack-dev python3-rpi.gpio portaudio19-dev
 ```
 
-9. Setup test script
-   `sudo nano examples/strandtest.py`
-   Then modifiy the constants in the class like the LED_PIN and LED_COUNT
-10. Run the code
-    `sudo python3 examples/strandtest.py`
+---
 
-### Drum Installation
+## 📥 3. Clone the Repository
 
-This will vary depending on the drumkit. Most led strips come with small clips that can be stuck or screwed into the drum.
-This can be avoided by using some for of tape or even covering part of the drum wall with tape and then using a glue gun
-to gule the strip to the part of the drum with tape. This makes it easy to take the strip off the drums if needed with no
-damage.
+Download the `led_drumkit` project:
 
-The strip will also need to be cut and either clipped together using something like this TODO or soldering together for
-better secure line connections.
+```bash
+git clone https://github.com/mcorkum/led_drumkit.git
+cd led_drumkit
+```
 
-### Server Start
+---
 
-Built by Stephen Colfer
+## 🏗️ 4. Set Up & Activate a Virtual Environment
 
-###
+Create and enter a **Python virtual environment**:
 
-sudo apt update
-sudo apt install -y \
- libasound2-dev \
- libjack-jackd2-dev \
- portaudio19-dev \
- python3-pyaudio \
- python3-rtmidi
+```bash
+python3 -m venv env
+source env/bin/activate
+```
+
+---
+
+## 🚀 5. Upgrade `pip` & Install Dependencies
+
+```bash
+pip install --upgrade pip setuptools wheel
+pip install -r requirements.txt
+```
+
+---
+
+## 🔇 7. Disable Onboard Audio (Required for LED Control)
+
+The `rpi_ws281x` library **uses PWM**, which conflicts with onboard audio. Disable it:
+
+```bash
+echo "blacklist snd_bcm2835" | sudo tee /etc/modprobe.d/snd-blacklist.conf
+```
+
+_(This prevents interference between PWM and the Raspberry Pi’s default sound system.)_
+
+**Optional: Force HDMI Audio (For Headless Systems)**
+
+```bash
+sudo sed -i '$a hdmi_force_hotplug=1\nhdmi_force_edid_audio=1' /boot/config.txt
+```
+
+This ensures HDMI audio works even if no monitor is plugged in.
+
+---
+
+## 🔌 8. Allow GPIO Access Without `sudo` (Recommended)
+
+To avoid running the script as `sudo`, add your user to the `gpio` group:
+
+```bash
+sudo usermod -aG gpio $USER
+```
+
+Then **log out and log back in**, or reboot:
+
+```bash
+sudo reboot
+```
+
+---
+
+## 🔄 9. Re-Activate Virtual Environment After Reboot
+
+```bash
+cd led_drumkit
+source env/bin/activate
+```
+
+---
+
+## 🥁 10. Run the Drumkit Code
+
+Try running without `sudo` first:
+
+```bash
+python main.py
+```
+
+If GPIO access fails, run:
+
+```bash
+sudo -E env/bin/python main.py
+```
+
+### 🛑 GPIO Permission Error
+
+Fix:
+
+```bash
+sudo usermod -aG gpio $USER
+sudo reboot
+```
+
+---
+
+## 🎉 Conclusion
+
+Following these steps, you should have a fully working **LED Drumkit** setup on your Raspberry Pi. Happy drumming! 🥁✨
