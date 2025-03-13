@@ -43,7 +43,7 @@ sudo apt-get update && sudo apt-get upgrade -y
 Install dependencies for **Python, MIDI, GPIO, and Audio**:
 
 ```bash
-sudo apt-get install -y python3 python3-venv python3-pip git libasound2-dev libjack-dev python3-rpi.gpio portaudio19-dev
+sudo apt-get install -y python3 python3-pip python3-rpi.gpio libasound2-dev libjack-dev portaudio19-dev
 ```
 
 ---
@@ -59,27 +59,18 @@ cd led_drumkit
 
 ---
 
-## 🏗️ 4. Set Up & Activate a Virtual Environment
+## 🚀 4. Install Python Dependencies System-Wide
 
-Create and enter a **Python virtual environment**:
+Since we are running with `sudo`, install all Python dependencies globally:
 
 ```bash
-python3 -m venv env
-source env/bin/activate
+sudo pip3 install --no-cache-dir --break-system-packages --upgrade pip setuptools wheel
+sudo pip3 install --no-cache-dir --break-system-packages -r requirements.txt
 ```
 
 ---
 
-## 🚀 5. Upgrade `pip` & Install Dependencies
-
-```bash
-pip install --upgrade pip setuptools wheel
-pip install -r requirements.txt
-```
-
----
-
-## 🔇 7. Disable Onboard Audio (Required for LED Control)
+## 🔇 5. Disable Onboard Audio (Required for LED Control)
 
 The `rpi_ws281x` library **uses PWM**, which conflicts with onboard audio. Disable it:
 
@@ -99,15 +90,9 @@ This ensures HDMI audio works even if no monitor is plugged in.
 
 ---
 
-## 🔌 8. Allow GPIO Access Without `sudo` (Recommended)
+## 🔄 6. Reboot the System
 
-To avoid running the script as `sudo`, add your user to the `gpio` group:
-
-```bash
-sudo usermod -aG gpio $USER
-```
-
-Then **log out and log back in**, or reboot:
+After installing all dependencies, reboot the Raspberry Pi:
 
 ```bash
 sudo reboot
@@ -115,40 +100,17 @@ sudo reboot
 
 ---
 
-## 🔄 9. Re-Activate Virtual Environment After Reboot
+## 🥁 7. Run the Drumkit Code (Always Use `sudo`)
+
+Since `rpi_ws281x` requires root access, always run the script with `sudo`:
 
 ```bash
 cd led_drumkit
-source env/bin/activate
-```
-
----
-
-## 🥁 10. Run the Drumkit Code
-
-Try running without `sudo` first:
-
-```bash
-python main.py
-```
-
-If GPIO access fails, run:
-
-```bash
-sudo -E env/bin/python main.py
-```
-
-### 🛑 GPIO Permission Error
-
-Fix:
-
-```bash
-sudo usermod -aG gpio $USER
-sudo reboot
+sudo python3 main.py
 ```
 
 ---
 
 ## 🎉 Conclusion
 
-Following these steps, you should have a fully working **LED Drumkit** setup on your Raspberry Pi. Happy drumming! 🥁✨
+Following these steps, you should have a fully working **LED Drumkit** setup on your Raspberry Pi using `sudo` and `--break-system-packages`. Happy drumming! 🥁✨
