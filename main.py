@@ -1,3 +1,4 @@
+#!/usr/bin/sudo /usr/bin/python
 import time
 import multiprocessing
 from utils.utils import *
