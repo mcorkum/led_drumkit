@@ -1,20 +1,17 @@
 # led_drumkit
 
-###### By Stephen Colfer
+###### By
 
 ## Description
 
-Turn your drumkit into a light show! By mounting an led strip to your drums you can use this code to control the strip through MIDI. With the correct setup the LEDs will react to the midi drum pads. This repo also includes the code for an optional web app to control the LED colours. Follow the steps here in the README for materials and setup. For more info on the project check out the video: https://youtu.be/ctKZRcTf2wk
+Credit to Stephen Colfer whom this is forked from. I have made significant changes. For more info on the project check out the video: https://youtu.be/ctKZRcTf2wk
 
-## Materials
+## 📌 Materials
 
-- Raspberry Pi
-- [WS2812 RGB LED Strip](https://www.amazon.co.uk/CHINLY-WS2812B-Individually-Addressable-Waterproof/dp/B01LSF4Q0A?pd_rd_w=Y8qio&pf_rd_p=907ba819-1a37-4335-8b84-d82a78945ade&pf_rd_r=XJJKR5NCNPWB7S3EAEC3&pd_rd_r=6c6d6a0f-9829-4747-8fee-2d0778cb1b8d&pd_rd_wg=QvtLt&pd_rd_i=B01LSF4Q0A&psc=1&ref_=pd_bap_d_rp_2_t) (or similar strip with individually addresable LEDs)
-- [Power supply suitedable](https://www.amazon.co.uk/gp/product/B07C4SNYCH/ref=ppx_yo_dt_b_search_asin_title?ie=UTF8&psc=1) for the LED strip. 10A per 300 5v leds in this case.
-- Drum kit capable of MIDI note output (electric drumkit or acoustic with triggers)
-- (Optional) [Aluminium LED channel](https://www.amazon.co.uk/Chesbung-Aluminum-Channels-Diffusers-Mounting/dp/B07RJVV9MY?pd_rd_w=TNSWg&pf_rd_p=508c5101-ccd9-46e7-b139-f5fa5b359865&pf_rd_r=BYKFHRAD8NJNQ7T5TBR3&pd_rd_r=4dde0c46-0170-4a38-af65-c321c9e4feb1&pd_rd_wg=nqF4R&psc=1&ref_=pd_bap_d_csi_vtp_0_t) for mounting to stands.
-- (Optional) [Useful power connectors](https://www.amazon.co.uk/gp/product/B01JZ3O36O/ref=ppx_yo_dt_b_search_asin_title?ie=UTF8&psc=1)
-- (Optional) [No solder strip connectors](https://www.amazon.co.uk/gp/product/B08FHXW4G5/ref=ppx_yo_dt_b_asin_title_o09_s00?ie=UTF8&psc=1)
+- Raspberry Pi 3 (what I used)
+- WS2812 RGB LED Strip (or similar strip with individually addressable LEDs)
+- Power supply suitable for the LED strip (10A per 300 5V LEDs)
+- Drum kit capable of MIDI note output (Mine is a TD17)
 
 # LED Drumkit - Raspberry Pi Setup Guide
 
@@ -68,6 +65,12 @@ sudo pip3 install --no-cache-dir --break-system-packages --upgrade pip setuptool
 sudo pip3 install --no-cache-dir --break-system-packages -r requirements.txt
 ```
 
+If `rpi_ws281x` is not in `requirements.txt`, install it explicitly:
+
+```bash
+sudo pip3 install --no-cache-dir --break-system-packages rpi-ws281x
+```
+
 ---
 
 ## 🔇 5. Disable Onboard Audio (Required for LED Control)
@@ -111,6 +114,77 @@ sudo python3 main.py
 
 ---
 
-## 🎉 Conclusion
+## 🔄 8. Start the Drumkit Script on Boot
 
-Following these steps, you should have a fully working **LED Drumkit** setup on your Raspberry Pi using `sudo` and `--break-system-packages`. Happy drumming! 🥁✨
+To automatically start the LED Drumkit script when the Raspberry Pi boots, use `systemd`.
+
+### **✅ 1. Create a Systemd Service File**
+
+Run:
+
+```bash
+sudo nano /etc/systemd/system/led_drumkit.service
+```
+
+Paste the following content:
+
+```ini
+[Unit]
+Description=LED Drumkit Service
+After=multi-user.target
+
+[Service]
+ExecStart=/usr/bin/python3 /home/pi/led_drumkit/main.py
+WorkingDirectory=/home/pi/led_drumkit
+StandardOutput=inherit
+StandardError=inherit
+Restart=always
+User=root
+
+[Install]
+WantedBy=multi-user.target
+```
+
+> **Ensure** the `ExecStart` path matches your Python installation and script location.
+
+Save and exit (**CTRL + X → Y → ENTER**).
+
+### **✅ 2. Enable & Start the Service**
+
+Run:
+
+```bash
+sudo systemctl daemon-reload
+sudo systemctl enable led_drumkit.service
+sudo systemctl start led_drumkit.service
+```
+
+To check if it's running:
+
+```bash
+sudo systemctl status led_drumkit.service
+```
+
+### **✅ 3. (Optional) Auto Restart on Crash**
+
+If you want the script to restart automatically if it crashes, ensure this line is in the `[Service]` section:
+
+```
+Restart=always
+```
+
+Then reload systemd:
+
+```bash
+sudo systemctl daemon-reload
+sudo systemctl restart led_drumkit.service
+```
+
+### **✅ 4. (Optional) Disable Autostart**
+
+To stop it from running on boot, disable it with:
+
+```bash
+sudo systemctl disable led_drumkit.service
+sudo systemctl stop led_drumkit.service
+```
