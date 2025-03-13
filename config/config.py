@@ -5,16 +5,17 @@ STRIP_GPIO_PIN = 18
 LED_COUNT = 150
 
 # Theme
-THEME_NAME = "deepspace"
+THEME_NAME = "neon"
 
 # Updated lists so that all intended drum hits (including rims) are processed.
 PAD_NOTES = [36, 38, 40, 48, 50, 45, 47, 43, 58]
-CYMBAL_NOTES = [44, 26, 46, 51, 53, 59, 55, 49]
+CYMBAL_NOTES = [44, 26, 22, 46, 51, 53, 59, 55, 49]
 
 # Updated MIDI note mapping based on your new mapping:
 MIDI_NOTE_INDEX = {
     36: "kick",         # Bass Drum
     44: "hihat",        # Hat Pedal
+    22: "hihat",        # Hi Hat closed
     26: "hihat",        # Hi Hat
     46: "hihat",        # Hi Hat Edge
     38: "snare",        # Snare
