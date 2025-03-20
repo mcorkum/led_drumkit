@@ -94,66 +94,68 @@ def idle_theaterChase(led_strip):
 def idle_breathing(led_strip, theme):
     """
     Breathing idle animation that cycles through each color in the current theme.
-    For each color, it fades in from a low brightness (min_factor) to full brightness and back,
-    then transitions from the current color (at low brightness) to the next color (at low brightness).
+    For each color, it fades in from a minimum brightness (min_factor) to a maximum brightness (max_factor)
+    and then fades back to the minimum brightness before transitioning to the next color (at min brightness).
     """
-    breathing_steps = 200      # Steps for the in/out breathing effect
-    transition_steps = 100     # Steps for transitioning between colors at low brightness
-    step_delay = 0.05          # Delay (in seconds) between steps
-    min_factor = 0.2           # Minimum brightness factor (20% brightness)
+    breathing_steps = 200      # Number of steps for the in/out breathing effect.
+    transition_steps = 100     # Number of steps for transitioning between colors.
+    step_delay = 0.05          # Delay (in seconds) between steps.
+    min_factor = 0.2           # Minimum brightness factor (20% brightness).
+    max_factor = 0.8           # Maximum brightness factor (80% brightness).
 
-    # Get the list of theme keys (order as in the theme file)
+    # Get a list of theme keys (order determined by your theme file).
     color_keys = list(theme.keys())
     if not color_keys:
         return
 
-    # Start with the first color
+    # Start with the first color.
     current_color = theme.get(color_keys[0], [255, 255, 255])
-    
-    while not idle_stop.is_set():
-        for i in range(len(color_keys)):
-            # Get the next color (cycling through the list)
-            next_color = theme.get(color_keys[(i + 1) % len(color_keys)], [255, 255, 255])
-            
-            # Breath effect for the current color:
-            # Fade in: from min_factor to 1.0 (full brightness)
-            for step in range(breathing_steps):
-                if idle_stop.is_set():
-                    return
-                # Interpolate brightness factor for the breathing in phase.
-                factor = min_factor + (1.0 - min_factor) * (step / float(breathing_steps))
-                # Scale current_color accordingly.
-                color = [int(current_color[j] * factor) for j in range(3)]
-                led_strip.setSegment(color, 0, LED_COUNT)
-                with led_lock:
-                    led_strip.strip.show()
-                time.sleep(step_delay)
-            # Fade out: from full brightness back to min_factor.
-            for step in range(breathing_steps, -1, -1):
-                if idle_stop.is_set():
-                    return
-                factor = min_factor + (1.0 - min_factor) * (step / float(breathing_steps))
-                color = [int(current_color[j] * factor) for j in range(3)]
-                led_strip.setSegment(color, 0, LED_COUNT)
-                with led_lock:
-                    led_strip.strip.show()
-                time.sleep(step_delay)
-            
-            # Transition phase: fade from current_color at min_factor to next_color at min_factor.
-            for step in range(transition_steps):
-                if idle_stop.is_set():
-                    return
-                t = step / float(transition_steps)
-                # Interpolate between current and next color, both at min brightness.
-                blended = [int((current_color[j] * (1 - t) + next_color[j] * t) * min_factor) for j in range(3)]
-                led_strip.setSegment(blended, 0, LED_COUNT)
-                with led_lock:
-                    led_strip.strip.show()
-                time.sleep(step_delay)
-            
-            # Prepare for the next cycle.
-            current_color = next_color
+    idx = 0
 
+    while not idle_stop.is_set():
+        # Get the next color (cycling through the keys).
+        next_color = theme.get(color_keys[(idx + 1) % len(color_keys)], [255, 255, 255])
+
+        # Fade in from min_factor to max_factor for current_color.
+        for step in range(breathing_steps):
+            if idle_stop.is_set():
+                return
+            t = step / float(breathing_steps)
+            # Interpolate brightness between min and max.
+            factor = min_factor + (max_factor - min_factor) * t
+            color = [int(current_color[i] * factor) for i in range(3)]
+            led_strip.setSegment(color, 0, LED_COUNT)
+            with led_lock:
+                led_strip.strip.show()
+            time.sleep(step_delay)
+
+        # Fade out from max_factor back to min_factor for current_color.
+        for step in range(breathing_steps, -1, -1):
+            if idle_stop.is_set():
+                return
+            t = step / float(breathing_steps)
+            factor = min_factor + (max_factor - min_factor) * t
+            color = [int(current_color[i] * factor) for i in range(3)]
+            led_strip.setSegment(color, 0, LED_COUNT)
+            with led_lock:
+                led_strip.strip.show()
+            time.sleep(step_delay)
+
+        # Transition phase: fade from current_color at min_factor to next_color at min_factor.
+        for step in range(transition_steps):
+            if idle_stop.is_set():
+                return
+            t = step / float(transition_steps)
+            # Blend the two colors, both at the minimum brightness.
+            blended = [int((current_color[i] * (1 - t) + next_color[i] * t) * min_factor) for i in range(3)]
+            led_strip.setSegment(blended, 0, LED_COUNT)
+            with led_lock:
+                led_strip.strip.show()
+            time.sleep(step_delay)
+
+        # Prepare for the next cycle.
+        current_color = next_color
+        idx = (idx + 1) % len(color_keys)
 
 
 def interruptibleRainbowCycle(led_strip, wait_ms=20, iterations=1):
