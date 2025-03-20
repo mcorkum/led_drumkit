@@ -93,31 +93,51 @@ def idle_theaterChase(led_strip):
 
 def idle_breathing(led_strip, theme):
     """
-    Breathing idle animation that cycles through each color in the current theme.
-    Instead of fading to black between colors, it continuously transitions from the previous color to the next.
+    Breathing idle animation that cycles through each color in the theme.
+    The transition fades in and out while gradually shifting to the next color.
     """
-    steps = 200         # Number of interpolation steps (increase for slower transitions).
+    steps = 100         # Steps for brightness fade-in/out
+    color_steps = 200   # Steps for transitioning colors
     step_delay = 0.05   # Delay between steps in seconds.
-    
-    # Get the list of keys from the theme.
+
+    # Get a list of theme colors
     color_keys = list(theme.keys())
-    # Start with the first color.
+
+    # Start with the first color
     prev_color = theme.get(color_keys[0], [255, 255, 255])
     idx = 0
+
     while not idle_stop.is_set():
         next_color = theme.get(color_keys[(idx + 1) % len(color_keys)], [255, 255, 255])
-        # Fade from prev_color to next_color.
+
+        # Fade in brightness (while blending into the next color)
         for step in range(steps):
             if idle_stop.is_set():
-                break
+                return
             t = step / float(steps)
-            interpolated = [int(prev_color[i] * (1 - t) + next_color[i] * t) for i in range(3)]
+            brightness = t  # Brightness fade-in
+            interpolated = [int((prev_color[i] * (1 - t) + next_color[i] * t) * brightness) for i in range(3)]
             led_strip.setSegment(interpolated, 0, LED_COUNT)
             with led_lock:
                 led_strip.strip.show()
             time.sleep(step_delay)
+
+        # Fade out brightness (while blending into the next color)
+        for step in range(steps, -1, -1):
+            if idle_stop.is_set():
+                return
+            t = step / float(steps)
+            brightness = t  # Brightness fade-out
+            interpolated = [int((prev_color[i] * (1 - t) + next_color[i] * t) * brightness) for i in range(3)]
+            led_strip.setSegment(interpolated, 0, LED_COUNT)
+            with led_lock:
+                led_strip.strip.show()
+            time.sleep(step_delay)
+
+        # Move to the next color
         prev_color = next_color
         idx = (idx + 1) % len(color_keys)
+
 
 def interruptibleRainbowCycle(led_strip, wait_ms=20, iterations=1):
     """
