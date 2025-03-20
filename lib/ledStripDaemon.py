@@ -93,40 +93,31 @@ def idle_theaterChase(led_strip):
 
 def idle_breathing(led_strip, theme):
     """
-    Breathing idle animation that cycles through each drum color from the theme.
-    For each color, it fades in from black to the target color and then fades out back to black.
+    Breathing idle animation that cycles through each color in the current theme.
+    Instead of fading to black between colors, it continuously transitions from the previous color to the next.
     """
-    # Define the number of interpolation steps and delay per step.
-    steps = 100         # Increase for a smoother (and slower) transition.
-    step_delay = 0.03   # Delay in seconds between steps.
+    steps = 200         # Number of interpolation steps (increase for slower transitions).
+    step_delay = 0.05   # Delay between steps in seconds.
     
-    # Get a list of theme keys.
+    # Get the list of keys from the theme.
     color_keys = list(theme.keys())
+    # Start with the first color.
+    prev_color = theme.get(color_keys[0], [255, 255, 255])
+    idx = 0
     while not idle_stop.is_set():
-        for key in color_keys:
+        next_color = theme.get(color_keys[(idx + 1) % len(color_keys)], [255, 255, 255])
+        # Fade from prev_color to next_color.
+        for step in range(steps):
             if idle_stop.is_set():
                 break
-            target = theme.get(key, [255, 255, 255])
-            # Fade in from black to target.
-            for step in range(0, steps):
-                if idle_stop.is_set():
-                    break
-                t = step / float(steps)
-                color = [int(target[i] * t) for i in range(3)]
-                led_strip.setSegment(color, 0, LED_COUNT)
-                with led_lock:
-                    led_strip.strip.show()
-                time.sleep(step_delay)
-            # Fade out from target to black.
-            for step in range(steps, -1, -1):
-                if idle_stop.is_set():
-                    break
-                t = step / float(steps)
-                color = [int(target[i] * t) for i in range(3)]
-                led_strip.setSegment(color, 0, LED_COUNT)
-                with led_lock:
-                    led_strip.strip.show()
-                time.sleep(step_delay)
+            t = step / float(steps)
+            interpolated = [int(prev_color[i] * (1 - t) + next_color[i] * t) for i in range(3)]
+            led_strip.setSegment(interpolated, 0, LED_COUNT)
+            with led_lock:
+                led_strip.strip.show()
+            time.sleep(step_delay)
+        prev_color = next_color
+        idx = (idx + 1) % len(color_keys)
 
 def interruptibleRainbowCycle(led_strip, wait_ms=20, iterations=1):
     """
