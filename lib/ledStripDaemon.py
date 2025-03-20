@@ -99,9 +99,9 @@ def idle_breathing(led_strip, theme):
     """
     breathing_steps = 200      # Number of steps for the in/out breathing effect.
     transition_steps = 100     # Number of steps for transitioning between colors.
-    step_delay = 0.05          # Delay (in seconds) between steps.
-    min_factor = 0.2           # Minimum brightness factor (20% brightness).
-    max_factor = 0.8           # Maximum brightness factor (80% brightness).
+    step_delay = 0.03          # Delay (in seconds) between steps.
+    min_factor = 0.1           # Minimum brightness factor (20% brightness).
+    max_factor = 0.3           # Maximum brightness factor (80% brightness).
 
     # Get a list of theme keys (order determined by your theme file).
     color_keys = list(theme.keys())
