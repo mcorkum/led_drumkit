@@ -1,4 +1,5 @@
 import time
+import math
 import threading
 from lib.ledStrip import *
 from utils.utils import *
@@ -91,7 +92,80 @@ def idle_theaterChase(led_strip):
         theaterChaseRainbowCycle(led_strip, wait_ms=50, cycles=1)
         time.sleep(0.1)
 
-import math
+
+def idle_movingGroup(led_strip, theme, group_size=15):
+    """
+    Idle animation that cycles through each theme color.
+    For each color, a group of `group_size` LEDs:
+      - Fades in from a minimum brightness (min_factor) to full brightness,
+      - Moves from the left side of the strip to the right and back,
+      - Then fades out from full brightness back to the minimum brightness.
+    """
+    fade_in_steps = 100    # Steps for the fade-in effect.
+    fade_out_steps = 100   # Steps for the fade-out effect.
+    move_delay = 0.03      # Delay between each movement step.
+    min_factor = 0.2       # Starting brightness factor (20% brightness).
+    max_factor = 1.0       # Full brightness factor.
+    
+    # Get the list of theme colors (based on keys in the theme JSON).
+    color_keys = list(theme.keys())
+    if not color_keys:
+        return
+
+    # Cycle through each color in the theme.
+    for key in color_keys:
+        if idle_stop.is_set():
+            break
+        target = theme.get(key, [255, 255, 255])
+        
+        # --- Fade In: Group at leftmost position ---
+        for step in range(fade_in_steps):
+            if idle_stop.is_set():
+                return
+            t = step / float(fade_in_steps)
+            factor = min_factor + (max_factor - min_factor) * t
+            color = [int(target[i] * factor) for i in range(3)]
+            for pos in range(0, group_size):
+                led_strip.setPixel(pos, color)
+            with led_lock:
+                led_strip.strip.show()
+            time.sleep(move_delay)
+        
+        # --- Move Group from Left to Right ---
+        for pos in range(0, LED_COUNT - group_size):
+            if idle_stop.is_set():
+                return
+            led_strip.setSegment([0, 0, 0], 0, LED_COUNT)  # Clear the strip.
+            for j in range(pos, pos + group_size):
+                led_strip.setPixel(j, target)  # Full brightness.
+            with led_lock:
+                led_strip.strip.show()
+            time.sleep(move_delay)
+        
+        # --- Move Group from Right to Left ---
+        for pos in range(LED_COUNT - group_size, 0, -1):
+            if idle_stop.is_set():
+                return
+            led_strip.setSegment([0, 0, 0], 0, LED_COUNT)
+            for j in range(pos, pos + group_size):
+                led_strip.setPixel(j, target)
+            with led_lock:
+                led_strip.strip.show()
+            time.sleep(move_delay)
+        
+        # --- Fade Out: Group back at leftmost position ---
+        for step in range(fade_out_steps, -1, -1):
+            if idle_stop.is_set():
+                return
+            t = step / float(fade_out_steps)
+            factor = min_factor + (max_factor - min_factor) * t
+            color = [int(target[i] * factor) for i in range(3)]
+            for pos in range(0, group_size):
+                led_strip.setPixel(pos, color)
+            with led_lock:
+                led_strip.strip.show()
+            time.sleep(move_delay)
+
 
 def idle_breathing(led_strip, theme):
     """
@@ -179,6 +253,8 @@ def idle_animation(led_strip):
         idle_theaterChase(led_strip)
     elif IDLE_ANIMATION == "breathing":
         idle_breathing(led_strip, theme)
+    elif IDLE_ANIMATION == "moving":
+        idle_movingGroup(led_strip, theme)
     else:
         idle_rainbow(led_strip)
 
