@@ -86,37 +86,41 @@ def idle_rainbow(led_strip):
 def idle_theaterChase(led_strip):
     """
     Idle animation using a theater chase rainbow cycle.
-    (Assumes you have a similar function; here we use our interruptible version.)
     """
     while not idle_stop.is_set():
         theaterChaseRainbowCycle(led_strip, wait_ms=50, cycles=1)
         time.sleep(0.1)
 
-def idle_breathing(led_strip):
+def idle_breathing(led_strip, theme):
     """
-    Idle animation with a simple breathing effect.
+    Idle breathing animation that cycles through each color in the theme.
+    For each color key in the theme, it performs a slow fade in and fade out.
     """
-    # Choose a base color for breathing (e.g., purple).
-    base_color = [200, 0, 200]
+    # Cycle through the keys of the theme.
+    color_keys = list(theme.keys())
     while not idle_stop.is_set():
-        # Fade in
-        for brightness in range(0, 256, 5):
+        for key in color_keys:
             if idle_stop.is_set():
-                return
-            scaled = [int(c * brightness / 255) for c in base_color]
-            led_strip.setSegment(scaled, 0, LED_COUNT)
-            with led_lock:
-                led_strip.strip.show()
-            time.sleep(0.02)
-        # Fade out
-        for brightness in range(255, -1, -5):
-            if idle_stop.is_set():
-                return
-            scaled = [int(c * brightness / 255) for c in base_color]
-            led_strip.setSegment(scaled, 0, LED_COUNT)
-            with led_lock:
-                led_strip.strip.show()
-            time.sleep(0.02)
+                break
+            base_color = theme.get(key, [255, 255, 255])
+            # Fade in
+            for brightness in range(0, 256, 5):
+                if idle_stop.is_set():
+                    break
+                scaled = [int(c * brightness / 255) for c in base_color]
+                led_strip.setSegment(scaled, 0, LED_COUNT)
+                with led_lock:
+                    led_strip.strip.show()
+                time.sleep(0.02)
+            # Fade out
+            for brightness in range(255, -1, -5):
+                if idle_stop.is_set():
+                    break
+                scaled = [int(c * brightness / 255) for c in base_color]
+                led_strip.setSegment(scaled, 0, LED_COUNT)
+                with led_lock:
+                    led_strip.strip.show()
+                time.sleep(0.02)
 
 def interruptibleRainbowCycle(led_strip, wait_ms=20, iterations=1):
     """
@@ -156,13 +160,15 @@ def theaterChaseRainbowCycle(led_strip, wait_ms=50, cycles=1):
 def idle_animation(led_strip):
     """
     Selects the idle animation based on the configuration.
+    For the breathing mode, it passes the current theme colors.
     """
+    theme = read_json_file(f"config/themes/{THEME_NAME}.json")
     if IDLE_ANIMATION == "rainbow":
         idle_rainbow(led_strip)
     elif IDLE_ANIMATION == "theater":
         idle_theaterChase(led_strip)
     elif IDLE_ANIMATION == "breathing":
-        idle_breathing(led_strip)
+        idle_breathing(led_strip, theme)
     else:
         idle_rainbow(led_strip)
 
