@@ -98,7 +98,7 @@ def idle_breathing(led_strip, theme):
     Breathing idle animation using sine modulation for smooth brightness changes.
     For each color in the theme, brightness modulates as a sine wave between min and max.
     """
-    steps = 400         # Total steps per cycle.
+    steps = 800         # Total steps per cycle.
     step_delay = 0.01   # Delay between steps.
     min_factor = 0.0    # Minimum brightness factor.
     max_factor = 0.5    # Maximum brightness factor.
