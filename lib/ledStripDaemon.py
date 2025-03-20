@@ -100,8 +100,8 @@ def idle_breathing(led_strip, theme):
     """
     steps = 400         # Total steps per cycle.
     step_delay = 0.01   # Delay between steps.
-    min_factor = 0.2    # Minimum brightness factor.
-    max_factor = 0.8    # Maximum brightness factor.
+    min_factor = 0.0    # Minimum brightness factor.
+    max_factor = 0.5    # Maximum brightness factor.
     
     # Calculate amplitude and offset for sine wave:
     amplitude = (max_factor - min_factor) / 2.0
