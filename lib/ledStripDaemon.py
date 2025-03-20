@@ -93,40 +93,34 @@ def idle_theaterChase(led_strip):
         time.sleep(0.1)
 
 
-def idle_movingGroup(led_strip, theme, group_size=15):
+def idle_movingGroup(led_strip, theme, group_size=25, move_delay=0.03):
     """
     Idle animation that cycles through each theme color.
     For each color, a group of `group_size` LEDs:
-      - Fades in from a minimum brightness (min_factor) to full brightness,
-      - Moves from the left side of the strip to the right and back,
-      - Then fades out from full brightness back to the minimum brightness.
+      - Grows in from the left (increasing lit LEDs from 0 to group_size),
+      - Moves from the left side of the strip to the right and then bounces back,
+      - Shrinks out on the left (decreasing the lit count until off),
+      - Then moves on to the next color.
     """
-    fade_in_steps = 100    # Steps for the fade-in effect.
-    fade_out_steps = 100   # Steps for the fade-out effect.
-    move_delay = 0.03      # Delay between each movement step.
-    min_factor = 0.2       # Starting brightness factor (20% brightness).
-    max_factor = 1.0       # Full brightness factor.
-    
-    # Get the list of theme colors (based on keys in the theme JSON).
+    # Get the list of theme keys.
     color_keys = list(theme.keys())
     if not color_keys:
         return
 
-    # Cycle through each color in the theme.
     for key in color_keys:
         if idle_stop.is_set():
             break
         target = theme.get(key, [255, 255, 255])
         
-        # --- Fade In: Group at leftmost position ---
-        for step in range(fade_in_steps):
+        # --- Grow In: Increase group size from 0 to group_size at the left ---
+        for current_size in range(1, group_size + 1):
             if idle_stop.is_set():
                 return
-            t = step / float(fade_in_steps)
-            factor = min_factor + (max_factor - min_factor) * t
-            color = [int(target[i] * factor) for i in range(3)]
-            for pos in range(0, group_size):
-                led_strip.setPixel(pos, color)
+            # Clear entire strip.
+            led_strip.setSegment([0, 0, 0], 0, LED_COUNT)
+            # Light up the first current_size LEDs.
+            for pos in range(current_size):
+                led_strip.setPixel(pos, target)
             with led_lock:
                 led_strip.strip.show()
             time.sleep(move_delay)
@@ -135,14 +129,14 @@ def idle_movingGroup(led_strip, theme, group_size=15):
         for pos in range(0, LED_COUNT - group_size):
             if idle_stop.is_set():
                 return
-            led_strip.setSegment([0, 0, 0], 0, LED_COUNT)  # Clear the strip.
+            led_strip.setSegment([0, 0, 0], 0, LED_COUNT)  # Clear strip.
             for j in range(pos, pos + group_size):
-                led_strip.setPixel(j, target)  # Full brightness.
+                led_strip.setPixel(j, target)
             with led_lock:
                 led_strip.strip.show()
             time.sleep(move_delay)
         
-        # --- Move Group from Right to Left ---
+        # --- Bounce Back: Move from Right to Left ---
         for pos in range(LED_COUNT - group_size, 0, -1):
             if idle_stop.is_set():
                 return
@@ -153,15 +147,13 @@ def idle_movingGroup(led_strip, theme, group_size=15):
                 led_strip.strip.show()
             time.sleep(move_delay)
         
-        # --- Fade Out: Group back at leftmost position ---
-        for step in range(fade_out_steps, -1, -1):
+        # --- Shrink Out: Decrease group size from group_size to 0 at the left ---
+        for current_size in range(group_size, 0, -1):
             if idle_stop.is_set():
                 return
-            t = step / float(fade_out_steps)
-            factor = min_factor + (max_factor - min_factor) * t
-            color = [int(target[i] * factor) for i in range(3)]
-            for pos in range(0, group_size):
-                led_strip.setPixel(pos, color)
+            led_strip.setSegment([0, 0, 0], 0, LED_COUNT)
+            for pos in range(current_size):
+                led_strip.setPixel(pos, target)
             with led_lock:
                 led_strip.strip.show()
             time.sleep(move_delay)
