@@ -38,7 +38,7 @@ def initStripValues(led_count):
 
 def runStartupAnimation(led_strip):
     """
-    Runs the startup animation (a horizontal wipe and fade-out).
+    Runs the startup animation (horizontal wipe and fade-out).
     """
     map_length = len(pixel_map)
     center = map_length // 2
@@ -66,33 +66,33 @@ def runStartupAnimation(led_strip):
         brightness_value = 250 - brightness_step
         led_strip.setSegment([brightness_value, 0, 0], 0, LED_COUNT)
 
-def interruptibleRainbowCycle(led_strip, wait_ms=20, iterations=1):
+def interruptibleRainbowCycle(led_strip, wait_ms=40, iterations=1):
     """
-    Runs a portion of a rainbow cycle animation (similar to the strandtest example)
-    for a fixed number of iterations. Checks idle_stop between iterations.
+    Runs a portion of the rainbow cycle (based on strandtest) for a fixed number
+    of iterations. Checks idle_stop between iterations.
     """
     num_pixels = led_strip.strip.numPixels()
     for j in range(256 * iterations):
         if idle_stop.is_set():
             return
         for i in range(num_pixels):
-            # Calculate color using the wheel function.
+            # Compute color using the wheel function.
             led_strip.strip.setPixelColor(i, led_strip.wheel((int(i * 256 / num_pixels) + j) & 255))
         led_strip.strip.show()
         time.sleep(wait_ms / 1000.0)
 
 def idle_animation(led_strip):
     """
-    Runs the interruptible rainbow cycle continuously until idle_stop is set.
+    Continuously runs interruptibleRainbowCycle until idle_stop is set.
     """
     while not idle_stop.is_set():
-        interruptibleRainbowCycle(led_strip, wait_ms=20, iterations=1)
-        time.sleep(0.1)
+        interruptibleRainbowCycle(led_strip, wait_ms=40, iterations=1)
+        time.sleep(0.2)  # Slightly longer pause between cycles.
 
 def runAnimation(led_strip, animation_type):
     if animation_type == 'startup':
         runStartupAnimation(led_strip)
-    # Other non-idle animations can be added here.
+    # Additional non-idle animations can be added here.
 
 def cleanup(led_strip):
     """
@@ -108,7 +108,7 @@ def ledStripDaemon(midi_note_queue):
     current_strip_values = initStripValues(LED_COUNT)
     colours = read_json_file(f"config/themes/{THEME_NAME}.json")
     
-    # Run the startup animation once.
+    # Run startup animation once.
     runStartupAnimation(led_strip)
     last_midi_time = time.time()
     
@@ -116,12 +116,14 @@ def ledStripDaemon(midi_note_queue):
         while True:
             if not midi_note_queue.empty():
                 midi_hit = midi_note_queue.get_nowait()
+                
                 # If idle animation is running, stop it.
                 if idle_thread is not None and idle_thread.is_alive():
                     idle_stop.set()
                     idle_thread.join()
                     idle_thread = None
                     idle_stop.clear()
+                
                 last_midi_time = time.time()
                 
                 if midi_hit.get("animation"):
@@ -148,23 +150,23 @@ def ledStripDaemon(midi_note_queue):
                     for idx in mapping:
                         current_strip_values[idx] = pixel_color
             
-            # Trigger idle animation after 5 seconds of inactivity.
+            # Start idle animation after 5 seconds of inactivity.
             if time.time() - last_midi_time > 5:
                 if idle_thread is None or not idle_thread.is_alive():
                     idle_thread = threading.Thread(target=idle_animation, args=(led_strip,))
                     idle_thread.start()
                     last_midi_time = time.time()  # Reset timer.
             
-            # Update LED strip: apply fades and refresh.
+            # Update the LED strip: fade and refresh.
             for i in range(len(current_strip_values)):
                 r, g, b = current_strip_values[i]
-                color = [g, r, b]  # Adjust ordering if needed.
+                color = [g, r, b]  # Adjust if necessary.
                 led_strip.setPixel(i, color)
                 current_strip_values[i] = linearFade(r, g, b)
             led_strip.stripShow()
             
-            # Throttle the main loop to improve smoothness.
-            time.sleep(0.03)
+            # Throttle the main loop.
+            time.sleep(0.05)
             
     except KeyboardInterrupt:
         print("KeyboardInterrupt received. Cleaning up...")
@@ -175,4 +177,3 @@ def ledStripDaemon(midi_note_queue):
     except Exception as e:
         print("Exception occurred:", e)
         cleanup(led_strip)
-
