@@ -93,34 +93,39 @@ def idle_theaterChase(led_strip):
         time.sleep(0.1)
 
 
-def idle_movingGroup(led_strip, theme, group_size=25, move_delay=0.03):
+def idle_movingGroup(led_strip, theme, group_size=25, move_delay=0.03, max_brightness=150):
     """
     Idle animation that cycles through each theme color.
-    For each color, a group of `group_size` LEDs:
-      - Grows in from the left (increasing lit LEDs from 0 to group_size),
-      - Moves from the left side of the strip to the right and then bounces back,
-      - Shrinks out on the left (decreasing the lit count until off),
-      - Then moves on to the next color.
+    For each color in the theme:
+      - The animation grows a block of `group_size` LEDs from off (0 brightness)
+        to the target color at the specified max brightness.
+      - Then the block moves across the strip (left-to-right, then bouncing back).
+      - Finally, the block shrinks back to off.
+      
+    max_brightness (0-255) scales the target color from the theme.
     """
     # Get the list of theme keys.
     color_keys = list(theme.keys())
     if not color_keys:
         return
 
+    # Cycle through each color in the theme.
     for key in color_keys:
         if idle_stop.is_set():
             break
         target = theme.get(key, [255, 255, 255])
+        # Scale the target color to the desired max brightness.
+        scaled_target = [int(c * max_brightness / 255) for c in target]
         
-        # --- Grow In: Increase group size from 0 to group_size at the left ---
+        # --- Grow In: Increase the lit group from 0 to group_size at the left ---
         for current_size in range(1, group_size + 1):
             if idle_stop.is_set():
                 return
-            # Clear entire strip.
+            # Clear the strip.
             led_strip.setSegment([0, 0, 0], 0, LED_COUNT)
             # Light up the first current_size LEDs.
             for pos in range(current_size):
-                led_strip.setPixel(pos, target)
+                led_strip.setPixel(pos, scaled_target)
             with led_lock:
                 led_strip.strip.show()
             time.sleep(move_delay)
@@ -129,35 +134,34 @@ def idle_movingGroup(led_strip, theme, group_size=25, move_delay=0.03):
         for pos in range(0, LED_COUNT - group_size):
             if idle_stop.is_set():
                 return
-            led_strip.setSegment([0, 0, 0], 0, LED_COUNT)  # Clear strip.
+            led_strip.setSegment([0, 0, 0], 0, LED_COUNT)  # Clear the strip.
             for j in range(pos, pos + group_size):
-                led_strip.setPixel(j, target)
+                led_strip.setPixel(j, scaled_target)
             with led_lock:
                 led_strip.strip.show()
             time.sleep(move_delay)
         
-        # --- Bounce Back: Move from Right to Left ---
+        # --- Bounce Back: Move Group from Right to Left ---
         for pos in range(LED_COUNT - group_size, 0, -1):
             if idle_stop.is_set():
                 return
             led_strip.setSegment([0, 0, 0], 0, LED_COUNT)
             for j in range(pos, pos + group_size):
-                led_strip.setPixel(j, target)
+                led_strip.setPixel(j, scaled_target)
             with led_lock:
                 led_strip.strip.show()
             time.sleep(move_delay)
         
-        # --- Shrink Out: Decrease group size from group_size to 0 at the left ---
+        # --- Shrink Out: Decrease the lit group from group_size to 0 at the left ---
         for current_size in range(group_size, 0, -1):
             if idle_stop.is_set():
                 return
             led_strip.setSegment([0, 0, 0], 0, LED_COUNT)
             for pos in range(current_size):
-                led_strip.setPixel(pos, target)
+                led_strip.setPixel(pos, scaled_target)
             with led_lock:
                 led_strip.strip.show()
             time.sleep(move_delay)
-
 
 def idle_breathing(led_strip, theme):
     """
