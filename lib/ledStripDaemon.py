@@ -2,14 +2,14 @@ import time
 import threading
 from lib.ledStrip import *
 from utils.utils import *
-from config.config import LED_COUNT, STRIP_GPIO_PIN, MIDI_NOTE_INDEX, LED_DRUM_INDEX, THEME_NAME
+from config.config import LED_COUNT, STRIP_GPIO_PIN, MIDI_NOTE_INDEX, LED_DRUM_INDEX, THEME_NAME, IDLE_ANIMATION
 from config.pixelMap import *
 from animations.hitAnimations import *
 
 # Global idle control variables and LED update lock.
 idle_thread = None
 idle_stop = threading.Event()
-led_lock = threading.Lock()  # Lock to prevent concurrent LED updates.
+led_lock = threading.Lock()  # Ensures only one thread updates the LED strip at a time.
 
 def get_led_indices_for_note(note):
     """
@@ -73,9 +73,54 @@ def runStartupAnimation(led_strip):
     with led_lock:
         led_strip.strip.show()
 
+# Idle animation functions:
+
+def idle_rainbow(led_strip):
+    """
+    Idle animation using an interruptible rainbow cycle.
+    """
+    while not idle_stop.is_set():
+        interruptibleRainbowCycle(led_strip, wait_ms=20, iterations=1)
+        time.sleep(0.05)
+
+def idle_theaterChase(led_strip):
+    """
+    Idle animation using a theater chase rainbow cycle.
+    (Assumes you have a similar function; here we use our interruptible version.)
+    """
+    while not idle_stop.is_set():
+        theaterChaseRainbowCycle(led_strip, wait_ms=50, cycles=1)
+        time.sleep(0.1)
+
+def idle_breathing(led_strip):
+    """
+    Idle animation with a simple breathing effect.
+    """
+    # Choose a base color for breathing (e.g., purple).
+    base_color = [200, 0, 200]
+    while not idle_stop.is_set():
+        # Fade in
+        for brightness in range(0, 256, 5):
+            if idle_stop.is_set():
+                return
+            scaled = [int(c * brightness / 255) for c in base_color]
+            led_strip.setSegment(scaled, 0, LED_COUNT)
+            with led_lock:
+                led_strip.strip.show()
+            time.sleep(0.02)
+        # Fade out
+        for brightness in range(255, -1, -5):
+            if idle_stop.is_set():
+                return
+            scaled = [int(c * brightness / 255) for c in base_color]
+            led_strip.setSegment(scaled, 0, LED_COUNT)
+            with led_lock:
+                led_strip.strip.show()
+            time.sleep(0.02)
+
 def interruptibleRainbowCycle(led_strip, wait_ms=20, iterations=1):
     """
-    Runs a portion of the rainbow cycle animation (like strandtest) for a fixed number
+    Runs a portion of a rainbow cycle (similar to strandtest) for a fixed number
     of iterations, checking idle_stop between iterations.
     """
     num_pixels = led_strip.strip.numPixels()
@@ -88,18 +133,43 @@ def interruptibleRainbowCycle(led_strip, wait_ms=20, iterations=1):
             led_strip.strip.show()
         time.sleep(wait_ms / 1000.0)
 
+def theaterChaseRainbowCycle(led_strip, wait_ms=50, cycles=1):
+    """
+    Runs a portion of the theater chase rainbow animation for a fixed number of cycles.
+    Checks idle_stop between iterations.
+    """
+    num_pixels = led_strip.strip.numPixels()
+    for j in range(256 * cycles):
+        if idle_stop.is_set():
+            return
+        for q in range(3):
+            for i in range(0, num_pixels, 3):
+                led_strip.strip.setPixelColor(i + q, led_strip.wheel((i + j) % 255))
+            with led_lock:
+                led_strip.strip.show()
+            time.sleep(wait_ms / 1000.0)
+            for i in range(0, num_pixels, 3):
+                led_strip.strip.setPixelColor(i + q, 0)
+    with led_lock:
+        led_strip.strip.show()
+
 def idle_animation(led_strip):
     """
-    Continuously runs the interruptible rainbow cycle until idle_stop is set.
+    Selects the idle animation based on the configuration.
     """
-    while not idle_stop.is_set():
-        interruptibleRainbowCycle(led_strip, wait_ms=20, iterations=1)
-        time.sleep(0.05)  # Pause between cycles.
+    if IDLE_ANIMATION == "rainbow":
+        idle_rainbow(led_strip)
+    elif IDLE_ANIMATION == "theater":
+        idle_theaterChase(led_strip)
+    elif IDLE_ANIMATION == "breathing":
+        idle_breathing(led_strip)
+    else:
+        idle_rainbow(led_strip)
 
 def runAnimation(led_strip, animation_type):
     if animation_type == 'startup':
         runStartupAnimation(led_strip)
-    # Other animations can be added here.
+    # Additional non-idle animations can be added here.
 
 def cleanup(led_strip):
     """
@@ -122,11 +192,9 @@ def ledStripDaemon(midi_note_queue):
     
     try:
         while True:
-            # Process incoming MIDI events.
             if not midi_note_queue.empty():
                 midi_hit = midi_note_queue.get_nowait()
-                
-                # If idle animation is active, stop it.
+                # If idle animation is running, stop it.
                 if idle_thread is not None and idle_thread.is_alive():
                     idle_stop.set()
                     idle_thread.join()
@@ -158,17 +226,14 @@ def ledStripDaemon(midi_note_queue):
                     for idx in mapping:
                         current_strip_values[idx] = pixel_color
             
-            # If no MIDI input for more than 5 seconds, trigger idle animation.
+            # Trigger idle animation after 5 seconds of inactivity.
             if time.time() - last_midi_time > 5:
                 if idle_thread is None or not idle_thread.is_alive():
                     idle_thread = threading.Thread(target=idle_animation, args=(led_strip,))
                     idle_thread.start()
-                    # When idle animation is active, skip updating the LEDs in the main loop.
-                    # (That way, only the idle thread updates the LED strip.)
-                    # We still update current_strip_values if needed, but do not call led_strip.strip.show()
-                    # in the main loop.
+                    last_midi_time = time.time()  # Reset timer.
             
-            # If idle animation is NOT running, update the LED strip with fades.
+            # If idle animation is NOT running, update LED strip normally.
             if idle_thread is None or not idle_thread.is_alive():
                 for i in range(len(current_strip_values)):
                     r, g, b = current_strip_values[i]
@@ -178,7 +243,7 @@ def ledStripDaemon(midi_note_queue):
                 with led_lock:
                     led_strip.strip.show()
             
-            # Throttle the main loop.
+            # Throttle main loop.
             time.sleep(0.03)
             
     except KeyboardInterrupt:

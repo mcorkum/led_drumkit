@@ -6,6 +6,7 @@ LED_COUNT = 150
 
 # Theme
 THEME_NAME = "neon"
+IDLE_ANIMATION = "breathing"  # or "theater", "breathing",  "rainbow"
 
 # Updated lists so that all intended drum hits (including rims) are processed.
 PAD_NOTES = [36, 38, 40, 48, 50, 45, 47, 43, 58]
